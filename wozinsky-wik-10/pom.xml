@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>in.virit</groupId>
+        <artifactId>webbluetooth-drivers</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>wozinsky-wik-10</artifactId>
+    <name>wozinsky-wik-10</name>
+    <packaging>jar</packaging>
+    <dependencies>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Boot & vaadin starter coming in to test scope via parent -->
+
+        <dependency>
+            <groupId>in.virit</groupId>
+            <artifactId>mopo</artifactId>
+            <version>0.0.6</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>test</scope>
+            <optional>true</optional>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Relevant build and publishing plugins inherited via parent -->
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>in.virit</groupId>
+        <artifactId>webbluetooth-drivers</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>label-printer-demo</artifactId>
+    <name>label-printer-demo</name>
+    <packaging>jar</packaging>
+    <dependencies>
+
+        <dependency>
+            <groupId>in.virit</groupId>
+            <artifactId>phomemo-driver</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>in.virit</groupId>
+            <artifactId>wozinsky-wik-10</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>in.virit</groupId>
+            <artifactId>mopo</artifactId>
+            <version>0.0.6</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>test</scope>
+            <optional>true</optional>
+        </dependency>
+
+    </dependencies>
+</project>
