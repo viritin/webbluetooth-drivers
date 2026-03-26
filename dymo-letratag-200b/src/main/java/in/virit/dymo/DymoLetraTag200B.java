@@ -25,7 +25,7 @@ import java.util.logging.Logger;
  * Uses the Dymo LetraTag 200B Bluetooth protocol with proper chunking and UUIDs.
  */
 @Tag("dymo-letratag-200b")
-public class DymoLetraTag200B extends Component {
+public class DymoLetraTag200B extends Component implements in.virit.ble.LabelPrinter {
 
     private static final Logger LOG = Logger.getLogger(DymoLetraTag200B.class.getName());
     // Dymo LetraTag 200B specific UUIDs

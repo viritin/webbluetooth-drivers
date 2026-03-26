@@ -21,7 +21,7 @@ import java.util.logging.Logger;
  * pairing dialog, then {@link #print(BufferedImage)} to send an image.
  */
 @Tag("phomemo-printer")
-public class PhomemoPrinter extends Component {
+public class PhomemoPrinter extends Component implements in.virit.ble.LabelPrinter {
 
     private static final Logger LOG = Logger.getLogger(PhomemoPrinter.class.getName());
     private static final String BLE_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb";

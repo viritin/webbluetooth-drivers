@@ -1,5 +1,6 @@
 package in.virit.demo;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -9,8 +10,11 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.router.Route;
+import in.virit.ble.LabelPrinter;
+import in.virit.dymo.DymoLetraTag200B;
 import in.virit.phomemo.LabelImage;
 import in.virit.phomemo.PhomemoPrinter;
 import in.virit.wozinsky.WozinskyScale;
@@ -37,11 +41,15 @@ public class LabelPrinterDemoView extends HorizontalLayout {
         PRODUCTS.put("Herring", List.of("Whole", "Fillet"));
     }
 
-    private final PhomemoPrinter printer = new PhomemoPrinter();
+    private final PhomemoPrinter phomemo = new PhomemoPrinter();
+    private final DymoLetraTag200B dymo = new DymoLetraTag200B();
+    private LabelPrinter activePrinter;
+
     private final WozinskyScale scale = new WozinskyScale();
     private final LabelImage labelPreview = new LabelImage();
     private final NumberField manualWeight = new NumberField("Weight (g)");
     private final Checkbox autoprint = new Checkbox("Autoprint", true);
+    private final Button connectBtn = new Button("Connect Printer", VaadinIcon.PRINT.create());
 
     private Product selectedProduct;
     private Button selectedButton;
@@ -96,8 +104,25 @@ public class LabelPrinterDemoView extends HorizontalLayout {
         var layout = new VerticalLayout();
         layout.setPadding(false);
 
-        var connectPrinter = new Button("Connect Printer", VaadinIcon.PRINT.create(),
-                e -> printer.requestConnection());
+        var printerSelect = new RadioButtonGroup<String>("Printer");
+        printerSelect.setItems("Phomemo M110", "Dymo LetraTag 200B");
+        printerSelect.setValue("Phomemo M110");
+        activePrinter = phomemo;
+        printerSelect.addValueChangeListener(e -> {
+            activePrinter = "Dymo LetraTag 200B".equals(e.getValue()) ? dymo : phomemo;
+            connectBtn.setEnabled(!activePrinter.isConnected());
+        });
+
+        connectBtn.addClickListener(e -> {
+            if (activePrinter != null) {
+                activePrinter.requestConnection();
+            }
+        });
+
+        phomemo.addConnectionListener(connected ->
+                connectBtn.setEnabled(!connected || activePrinter != phomemo));
+        dymo.addConnectionListener(connected ->
+                connectBtn.setEnabled(!connected || activePrinter != dymo));
 
         scale.addWeightListener(e -> {
             if (e.getWeightGrams() > 0) {
@@ -132,7 +157,8 @@ public class LabelPrinterDemoView extends HorizontalLayout {
         labelPreview.getStyle()
                 .setBorder("1px solid lightgray");
 
-        layout.add(scale, connectPrinter, autoprint, manualWeight, printBtn, labelPreview, printer);
+        layout.add(scale, printerSelect, connectBtn, autoprint, manualWeight, printBtn, labelPreview,
+                (Component) phomemo, (Component) dymo);
         return layout;
     }
 
@@ -148,9 +174,9 @@ public class LabelPrinterDemoView extends HorizontalLayout {
     }
 
     private void printLabel(int weightGrams) {
-        if (selectedProduct == null) return;
+        if (selectedProduct == null || activePrinter == null) return;
         updatePreview(weightGrams);
-        printer.print(labelPreview.getBufferedImage());
+        activePrinter.print(labelPreview.getTrimmedBufferedImage());
         Notification.show("Printing: " + selectedProduct.label() + " " + weightGrams + "g");
     }
 
@@ -170,27 +196,23 @@ public class LabelPrinterDemoView extends HorizontalLayout {
         int marginY = h / 10;
         int y = marginY;
 
-        // Product name — large and bold
-        Font titleFont = new Font(Font.SANS_SERIF, Font.BOLD, 28);
-        g.setFont(titleFont);
+        // Product name
+        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 28));
         FontMetrics fm = g.getFontMetrics();
         g.drawString(selectedProduct.label(), marginX, y + fm.getAscent());
         y += fm.getHeight() + 4;
 
         // Weight
         if (weightGrams > 0) {
-            String weightStr = weightGrams + " g";
-            Font weightFont = new Font(Font.SANS_SERIF, Font.PLAIN, 22);
-            g.setFont(weightFont);
+            g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 22));
             fm = g.getFontMetrics();
-            g.drawString(weightStr, marginX, y + fm.getAscent());
+            g.drawString(weightGrams + " g", marginX, y + fm.getAscent());
             y += fm.getHeight() + 4;
         }
 
         // Date
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        Font dateFont = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
-        g.setFont(dateFont);
+        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 16));
         fm = g.getFontMetrics();
         g.drawString(date, marginX, y + fm.getAscent());
 

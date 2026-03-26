@@ -23,13 +23,14 @@ import com.vaadin.flow.shared.Registration;
  *   <li>0xFFB2 — notify (weight data)</li>
  * </ul>
  * <p>
- * Protocol (8 bytes): {@code AC 05 XX XX WL WH SS CK}
+ * Protocol (8 bytes): {@code AC 05 XX WH WL XX SS CK}
  * <ul>
  *   <li>Bytes 0-1: header (0xAC 0x05)</li>
- *   <li>Bytes 2-3: reserved</li>
- *   <li>Bytes 4-5: weight in grams (little-endian uint16)</li>
+ *   <li>Byte 2: reserved</li>
+ *   <li>Bytes 3-4: weight in grams (big-endian uint16)</li>
+ *   <li>Byte 5: reserved</li>
  *   <li>Byte 6: status (0xCA = stable, 0xCE = measuring)</li>
- *   <li>Byte 7: checksum = (byte4 + byte5 + byte6) &amp; 0xFF</li>
+ *   <li>Byte 7: checksum</li>
  * </ul>
  */
 public class WozinskyScale extends VerticalLayout {
@@ -177,12 +178,19 @@ public class WozinskyScale extends VerticalLayout {
                     let lastWeight = -1, lastStable = -1;
                     notifyChar.addEventListener('characteristicvaluechanged', (event) => {
                       const v = event.target.value;
-                      if (v.byteLength < 8) return;
-                      if (v.getUint8(0) !== 0xAC || v.getUint8(1) !== 0x05) return;
+                      if (v.byteLength < 6) return;
+                      const bytes = new Uint8Array(v.buffer);
+                      const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                      if (v.getUint8(0) !== 0xAC || v.getUint8(1) !== 0x05) {
+                        console.log('Scale: unknown packet:', hex);
+                        return;
+                      }
+                      console.log('Scale: raw:', hex, '(' + v.byteLength + ' bytes)');
 
-                      const weightGrams = v.getUint8(4) | (v.getUint8(5) << 8);
+                      const weightGrams = v.getUint16(3, false);
                       const status = v.getUint8(6);
                       const stable = (status === 0xCA) ? 1 : 0;
+                      console.log('Scale: weight=' + weightGrams + 'g stable=' + stable);
                       if (weightGrams === lastWeight && stable === lastStable) return;
                       lastWeight = weightGrams;
                       lastStable = stable;

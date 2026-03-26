@@ -20,6 +20,13 @@
 
         <dependency>
             <groupId>in.virit</groupId>
+            <artifactId>dymo-letratag-200b</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>in.virit</groupId>
             <artifactId>wozinsky-wik-10</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
@@ -28,19 +35,6 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.5.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>javase</artifactId>
-            <version>3.5.3</version>
             <scope>test</scope>
         </dependency>
 

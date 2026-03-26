@@ -38,6 +38,7 @@
         </license>
     </licenses>
     <modules>
+        <module>ble-label-common</module>
         <module>phomemo-driver</module>
         <module>wozinsky-wik-10</module>
         <module>dymo-letratag-200b</module>

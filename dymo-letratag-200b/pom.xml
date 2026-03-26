@@ -12,6 +12,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>in.virit</groupId>
+            <artifactId>ble-label-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-core</artifactId>
             <scope>provided</scope>
@@ -24,12 +30,6 @@
             <artifactId>mopo</artifactId>
             <version>0.0.6</version>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.zxing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.5.3</version>
         </dependency>
 
         <dependency>
