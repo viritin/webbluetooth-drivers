@@ -3,7 +3,7 @@
     <parent>
         <groupId>in.virit</groupId>
         <artifactId>webbluetooth-drivers</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>phomemo-driver</artifactId>
     <name>phomemo-driver</name>

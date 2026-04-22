@@ -3,7 +3,7 @@
     <parent>
         <groupId>in.virit</groupId>
         <artifactId>webbluetooth-drivers</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>dymo-letratag-200b</artifactId>
     <name>dymo-letratag-200b</name>
