@@ -1,14 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>in.virit</groupId>
-        <artifactId>webbluetooth-drivers</artifactId>
-        <version>1.0-SNAPSHOT</version>
-    </parent>
+    <groupId>in.virit</groupId>
     <artifactId>rpi-letra-example</artifactId>
     <name>rpi-letra-example</name>
     <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
 
     <description>
         Headless Java bridge for a Raspberry Pi: discovers a Dymo LetraTag 200B over
@@ -26,7 +23,8 @@
         <dependency>
             <groupId>in.virit</groupId>
             <artifactId>dymo-letratag-200b</artifactId>
-            <version>${project.version}</version>
+            <version>1.0.0-SNAPSHOT</version>
+            <!-- (Ab)using part of the WebBluetooth "driver", don't pull in whole Vaadin -->
             <exclusions>
                 <exclusion>
                     <groupId>com.vaadin</groupId>

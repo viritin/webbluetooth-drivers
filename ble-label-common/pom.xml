@@ -4,7 +4,7 @@
     <parent>
         <groupId>in.virit</groupId>
         <artifactId>webbluetooth-drivers</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>ble-label-common</artifactId>
     <name>ble-label-common</name>
