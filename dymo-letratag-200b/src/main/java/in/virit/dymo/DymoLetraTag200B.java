@@ -5,9 +5,11 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -32,7 +34,7 @@ public class DymoLetraTag200B extends Component implements in.virit.ble.LabelPri
     private static final String BLE_SERVICE_UUID = "be3dd650-2b3d-42f1-99c1-f0f749dd0678";
     private static final String BLE_WRITE_CHAR_UUID = "be3dd651-2b3d-42f1-99c1-f0f749dd0678";
     private static final String BLE_NOTIFY_CHAR_UUID = "be3dd652-2b3d-42f1-99c1-f0f749dd0678";
-    private static final int CHUNK_SIZE = 500; // Dymo protocol uses 500 byte chunks
+    private static final int CHUNK_SIZE = LetraTagProtocol.CHUNK_SIZE;
 
     private boolean connected;
     private final List<Consumer<Boolean>> connectionListeners = new ArrayList<>();
@@ -50,6 +52,57 @@ public class DymoLetraTag200B extends Component implements in.virit.ble.LabelPri
     }
 
     /**
+     * Prints the given text as a single-line label. If the printer is not yet
+     * connected, the browser's Bluetooth pairing dialog is opened automatically
+     * and the text is printed once the connection is established.
+     *
+     * @param text the text to print
+     */
+    public void print(String text) {
+        if (!connected) {
+            addConnectionListener(new Consumer<Boolean>() {
+                @Override
+                public void accept(Boolean nowConnected) {
+                    connectionListeners.remove(this);
+                    if (nowConnected) {
+                        print(text);
+                    }
+                }
+            });
+            requestConnection();
+            return;
+        }
+        print(renderText(text));
+    }
+
+    private static BufferedImage renderText(String text) {
+        int height = LetraTagProtocol.PRINTABLE_HEIGHT_PX;
+        int fontSize = 28;
+        int marginX = 8;
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
+
+        BufferedImage probe = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D pg = probe.createGraphics();
+        pg.setFont(font);
+        FontMetrics fm = pg.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+        int baseline = (height + fm.getAscent() - fm.getDescent()) / 2;
+        pg.dispose();
+
+        int width = textWidth + 2 * marginX;
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, width, height);
+        g.setColor(Color.BLACK);
+        g.setFont(font);
+        g.drawString(text, marginX, baseline);
+        g.dispose();
+        return img;
+    }
+
+    /**
      * Prints the given image on the connected Dymo LetraTag 200B printer.
      * The image is converted to monochrome and sent using the printer's protocol.
      *
@@ -58,7 +111,9 @@ public class DymoLetraTag200B extends Component implements in.virit.ble.LabelPri
     public void print(BufferedImage image) {
         LOG.info("print() called: image " + image.getWidth() + "x" + image.getHeight()
                 + " type=" + image.getType());
-        byte[] commandBytes = buildPrintCommands(image);
+        BufferedImage stretched = LetraTagProtocol.stretchHorizontally(image);
+        LOG.info("Stretched to: " + stretched.getWidth() + "x" + stretched.getHeight());
+        byte[] commandBytes = LetraTagProtocol.buildPrintCommands(stretched);
         LOG.info("Built print commands: " + commandBytes.length + " bytes total");
         String base64 = Base64.getEncoder().encodeToString(commandBytes);
         getElement().executeJs("return this._dymo.sendData($0)", base64);
@@ -75,7 +130,7 @@ public class DymoLetraTag200B extends Component implements in.virit.ble.LabelPri
     @ClientCallable
     private void onConnectionChange(boolean connected) {
         this.connected = connected;
-        connectionListeners.forEach(l -> l.accept(connected));
+        new ArrayList<>(connectionListeners).forEach(l -> l.accept(connected));
     }
 
     /**
@@ -278,111 +333,5 @@ public class DymoLetraTag200B extends Component implements in.virit.ble.LabelPri
             })();
             """.formatted(BLE_SERVICE_UUID, BLE_WRITE_CHAR_UUID, BLE_NOTIFY_CHAR_UUID,
                 CHUNK_SIZE));
-    }
-
-    /**
-     * Converts a BufferedImage to Dymo LetraTag 200B printer commands using the proper protocol.
-     */
-    byte[] buildPrintCommands(BufferedImage original) {
-        LOG.info("buildPrintCommands: starting conversion, image size: " + original.getWidth() + "x" + original.getHeight());
-        int width = original.getWidth();
-        int height = original.getHeight();
-        
-        // LetraTag 200B has 32 pixels height (4 bytes per column = 32 bits)
-        int printableHeight = Math.min(height, 32);
-        
-        // Convert to monochrome bitmap - LetraTag uses 1-bit per pixel, 4 bytes per vertical line (32 bits)
-        // Each byte represents 8 pixels vertically, and we have 4 bytes per column (32 pixels total)
-        int widthBytes = width; // Each column takes 4 bytes
-        int totalBitmapSize = widthBytes * 4; // 4 bytes per column
-        
-        LOG.info("buildPrintCommands: width=" + width + " height=" + printableHeight
-                + " widthBytes=" + widthBytes + " bitmapSize=" + totalBitmapSize);
-
-        // Convert to monochrome bitmap
-        // Each column is 4 bytes (32 bits), big-endian byte order, MSB first within byte
-        byte[] bitmap = new byte[totalBitmapSize];
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < printableHeight; y++) {
-                int rgb = original.getRGB(x, y);
-                int r = (rgb >> 16) & 0xFF;
-                int g = (rgb >> 8) & 0xFF;
-                int b = rgb & 0xFF;
-                int gray = (r * 299 + g * 587 + b * 114) / 1000;
-
-                if (gray < 128) {
-                    int xOffset = x * 4;
-                    int yOffset = 3 - (y / 8); // big-endian: byte 3 is top
-                    int bitPosition = 7 - (y % 8);
-                    bitmap[xOffset + yOffset] |= (byte) (1 << bitPosition);
-                }
-            }
-        }
-
-        // Build payload first so we know its length for the header
-        ByteArrayOutputStream payload = new ByteArrayOutputStream();
-
-        // START directive
-        payload.write(0x1B); payload.write(0x73);
-        payload.write(0x9A); payload.write(0x02); payload.write(0x00); payload.write(0x00);
-
-        // PRINT_DATA directive
-        payload.write(0x1B); payload.write(0x44);
-        payload.write(0x01); // bits per pixel
-        payload.write(0x02); // alignment
-        // Width = number of columns (4 bytes LE)
-        payload.write(width & 0xFF);
-        payload.write((width >> 8) & 0xFF);
-        payload.write((width >> 16) & 0xFF);
-        payload.write((width >> 24) & 0xFF);
-        // Height = 32 (4 bytes LE)
-        payload.write(0x20); payload.write(0x00); payload.write(0x00); payload.write(0x00);
-        // Image data
-        payload.writeBytes(bitmap);
-
-        // FORM_FEED
-        payload.write(0x1B); payload.write(0x45);
-        // STATUS
-        payload.write(0x1B); payload.write(0x41);
-        // END
-        payload.write(0x1B); payload.write(0x51);
-
-        int payloadLength = payload.size();
-        LOG.info("Payload: " + payloadLength + " bytes (bitmap: " + bitmap.length
-                + " bytes for " + width + " columns)");
-
-        // Build header (9 bytes): FF F0 12 34 [length LE 4] [checksum]
-        byte[] header = new byte[9];
-        header[0] = (byte) 0xFF;
-        header[1] = (byte) 0xF0;
-        header[2] = 0x12;
-        header[3] = 0x34;
-        header[4] = (byte) (payloadLength & 0xFF);
-        header[5] = (byte) ((payloadLength >> 8) & 0xFF);
-        header[6] = (byte) ((payloadLength >> 16) & 0xFF);
-        header[7] = (byte) ((payloadLength >> 24) & 0xFF);
-        // Checksum = sum of bytes 0..7 mod 256
-        int checksum = 0;
-        for (int i = 0; i < 8; i++) {
-            checksum += header[i] & 0xFF;
-        }
-        header[8] = (byte) (checksum & 0xFF);
-
-        LOG.info("Header: " + bytesToHex(header));
-
-        // Combine header + payload
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.writeBytes(header);
-        out.writeBytes(payload.toByteArray());
-        return out.toByteArray();
-    }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            if (!sb.isEmpty()) sb.append(' ');
-            sb.append(String.format("%02x", b & 0xFF));
-        }
-        return sb.toString();
     }
 }

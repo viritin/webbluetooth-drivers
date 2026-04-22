@@ -168,7 +168,7 @@ public class LabelImage extends Image {
         }
     }
 
-    protected static int mmToPixels(int mm, int dpi) {
+    public static int mmToPixels(int mm, int dpi) {
         return (int) Math.round(mm / MM_PER_INCH * dpi);
     }
 }

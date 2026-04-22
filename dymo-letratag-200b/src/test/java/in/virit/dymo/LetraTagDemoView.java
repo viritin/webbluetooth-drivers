@@ -6,6 +6,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
 import java.awt.*;
@@ -30,7 +31,7 @@ public class LetraTagDemoView extends VerticalLayout {
                 generateLabel(qrContent.getValue(), labelText.getValue()));
 
         var connectBtn = new Button("Connect Printer", e -> printer.requestConnection());
-        var printBtn = new Button("Print", e -> printer.print(labelImage.getTrimmedStretchedBufferedImage()));
+        var printBtn = new Button("Print", e -> printer.print(labelImage.getTrimmedBufferedImage()));
         var testBtn = new Button("Test Pattern", e -> printer.printTestPattern());
         printer.addConnectionListener(connected -> {
             connectBtn.setVisible(!connected);
@@ -44,7 +45,17 @@ public class LetraTagDemoView extends VerticalLayout {
         labelImage.getStyle()
                 .setBorder("1px solid lightgray");
 
-        add(qrContent, labelText, generateBtn, printerButtons, labelImage, printer);
+        var quickText = new TextField("Quick text print");
+        quickText.setWidthFull();
+        quickText.setValueChangeMode(ValueChangeMode.LAZY);
+        quickText.setValue("Hello!");
+        var quickPrintBtn = new Button("Print text (auto-connect)",
+                e -> printer.print(quickText.getValue()));
+        var quickPrintLayout = new HorizontalLayout(quickText, quickPrintBtn);
+        quickPrintLayout.setWidthFull();
+        quickPrintLayout.setAlignItems(Alignment.END);
+
+        add(qrContent, labelText, generateBtn, printerButtons, labelImage, quickPrintLayout, printer);
 
         generateLabel(qrContent.getValue(), labelText.getValue());
     }
