@@ -35,6 +35,14 @@ Demo application combining the printer drivers and scale into a product labeling
 
 Run with `mvn spring-boot:test-run` from the `label-printer-demo` directory.
 
+### rpi-letra-example
+
+An example of an alternative angle for using Bluetooth device like a label printer than via WebBluetooth. Uses partly the same Java code as the WebBluetooth driver for dymo-letratag-200b, but instead of using via browser there is a tiny Raspberry Pi software that turns your Raspberry Pi into a "print server" that can then be connected to a server "anywhere in the interwebs".
+
+The web server part of the example lives in [the WWCD demo](https://github.com/mstahv/wwcd/commit/2dcde30a154568b9259b0c4b900a224c4dd4f9c3).
+
+Note that the example is trivial PoC. For real world usage of such pattern, you'll probably want to setup some sort of security and in the UI let users choose to which printer they want their tags/receipts/whatever to be printed (demo now prints to all connected print servers).
+
 ## Requirements
 
 - Java 21+
